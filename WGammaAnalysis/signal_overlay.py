@@ -16,13 +16,13 @@ nBins = 1000
 
 histRanges = {}
 histRanges["ph_pt"] = (0, 1200)
-histRanges["jetAK8_pt"] = (0, 1200)
+histRanges["jetAK8_pt"] = (0, 1500)
 histRanges["ph_eta"] = (-3.,3.)
 histRanges["ph_phi"] = (-3.14,3.14)
 histRanges["jetAK8_eta"] = (-3.,3.)
 histRanges["jetAK8_phi"] = (-3.14,3.14)
 histRanges["jetAK8_puppi_softdrop_mass"] = (0,500)
-histRanges["tau12"] = (0,2.5)
+histRanges["tau21"] = (0,1)
 
 #TODO: 750 isn't among my signal MC; do I do 700 and/or 800?
 signalMasses = [600, 800,1000,2000,3500]
@@ -33,13 +33,13 @@ weightDict = getMCbgWeightsDict(bkgDir)
 
 
 
-observables = ["ph_pt","ph_eta","jetAK8_pt","jetAK8_eta","jetAK8_puppi_softdrop_mass","tau12"]
-observables = ["tau12"]
+observables = ["tau21"]#,"ph_pt","ph_eta","jetAK8_pt","jetAK8_eta","jetAK8_puppi_softdrop_mass"]
+
 
 for observable in observables:
 	print("plotting all for %s"%observable)
 
-	if(observable != "tau12"):
+	if(observable != "tau21"):
 		#Data
 		dataHist = TH1F("dataHist", "dataHist", nBins, histRanges[observable][0], histRanges[observable][1])
 
@@ -51,9 +51,10 @@ for observable in observables:
 		dataHist2 = TH1F("dataHist2", "dataHist2", nBins, histRanges[observable][0], histRanges[observable][1])
 
 
-		data.Draw("%s>>dataHist" % "jetAK8_tau1")
-		data.Draw("%s>>dataHist2" % "jetAK8_tau2")
+		data.Draw("%s>>dataHist" % "jetAK8_tau2")
+		data.Draw("%s>>dataHist2" % "jetAK8_tau1")
 		dataHist.Divide(dataHist2)
+		#dataHist.SetAxisRange(0,1500,"Y")
 
 	#Background
 	fileDict = {}
@@ -99,11 +100,16 @@ for observable in observables:
 		
 	    sigHists[name]=TH1F(histLabel, histLabel, nBins, histRanges[observable][0], histRanges[observable][1])
 	    #iterTree.Draw('%s>>%s' % (observable, histLabel), str(weight))
-	    if(observable == "tau12"):
+	    if(observable == "tau21"):
 	        sigHist2=TH1F("%s2"%histLabel, "%s2"%histLabel, nBins, histRanges[observable][0], histRanges[observable][1])
-	        iterTrees[name].Draw('%s>>%s' % ("jetAk8_tau1", histLabel))
-	        iterTrees[name].Draw('%s>>%s' % ("jetAK8_tau2", "%s2"%histLabel))
+	        iterTrees[name].Draw('%s>>%s' % ("jetAK8_tau2", histLabel))
+	        iterTrees[name].Draw('%s>>%s' % ("jetAK8_tau1", "%s2"%histLabel))
 	        sigHists[name].Divide(sigHist2)
+		#sigHists[name].SetAxisRange(0,1500,"Y")
+		#c = TCanvas("test","test",800,800)
+		#c.cd()
+		#sigHists[name].Draw()
+		#c.Print("test",'png')
 	    else:
 	        iterTrees[name].Draw('%s>>%s' % (observable, histLabel))
 	    sigHists[name].SetLineColor(kRed)
@@ -119,10 +125,14 @@ for observable in observables:
 	    cans[sigMass] = TCanvas("can","Signal overlay on Data",800,800)
 	    cans[sigMass].cd()
 	    signal = getSignalHist(sigMass)
+	    #Normalize to data to find relative peaks. Remove to verify signal is beneath data before fine-tuning
+	    '''
 	    if(signal.GetSumOfWeights() != 0):
 	        signal.Scale(dataHist.GetSumOfWeights()/signal.GetSumOfWeights())
 	    else:
+		#signal.Scale(1000)
 	        print("WARNING: Zero sum of weights")
+	    '''
 	    signal.Draw()
 	    dataHist.Draw("SAME")
 	    leg = TLegend(0.7,0.7,0.9,0.9)
@@ -133,6 +143,7 @@ for observable in observables:
 	    
 	    printName = 'signalOverlays/%s/signal_m%s_%s.png'%(observable,str(sigMass), observable)
 	    cans[sigMass].Print(printName,'png')
+
 	    outFile = TFile("signalOverlays/%s/signal_m%s_%s.root"%(observable,str(sigMass), observable),"RECREATE")
 	    outFile.cd()
 	    cans[sigMass].Write()

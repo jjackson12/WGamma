@@ -132,7 +132,7 @@ pad2.cd()
 ratioPlot.Draw()
 pad2.SetLogy()
 #ratioPlot.Draw("ep")
-
+can.SetTitle(observable)
 can.Print('bkgSanityCheck/bkg_vs_data_%s.png'%observable,'png')
 
 outFile = TFile("bkgSanityCheck/bkg_vs_data_%s.root" % observable,"RECREATE")
