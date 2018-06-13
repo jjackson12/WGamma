@@ -1,0 +1,9 @@
+#!/bin/bash
+
+while read f; do
+  echo "STATUS: running on $f\n"
+  cp -R -n -v /mnt/hadoop/store/user/johakala/$f .
+done <Backgrounds
+
+
+
